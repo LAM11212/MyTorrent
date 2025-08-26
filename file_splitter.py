@@ -25,7 +25,3 @@ def create_metadata(filename, chunk_size=1024):
 
 if __name__ == '__main__':
     create_metadata('ThumbsUpEmoji.png')
-
-
-
-

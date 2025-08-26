@@ -1,7 +1,10 @@
-import socket, json
+import socket, json, struct, hashlib
 
 FILE = "ThumbsUpEmoji.png"
 META = json.load(open(FILE + ".json", "r"))
+ensure_protocol = b'FemboyTorrent'
+ensure_hash = hashlib.sha256(open(FILE, "rb").read()).digest()
+ensure_hash = ensure_hash[:20]
 
 def serve_piece(conn):
     request = conn.recv(1024).decode()
@@ -16,18 +19,58 @@ def serve_piece(conn):
 
     conn.sendall(data)
 
+def connect_with_tracker():
+    s = socket.socket()
+    s.connect(("127.0.0.1", 8000))
+    peer_info = {
+        "peer_id": "abcd123",
+        "ip": "127.0.0.1",
+        "port": 5000,
+        "is_seeder": True
+    }
+    msg = {"action": "register",
+           "peer": peer_info}
+    s.sendall(json.dumps(msg).encode())
+    s.close()
+
 def main():
     s = socket.socket()
     s.bind(("127.0.0.1", 5000))
     s.listen(5)
 
     print("Seeder listening on port 5000")
+    connect_with_tracker()
 
     conn, addr = s.accept()
     while True:
         print("connection from", addr)
-        serve_piece(conn)
+        if handle_handshake(conn):
+            serve_piece(conn)
         conn.close()
 
+def handle_handshake(conn):
+        handshake = conn.recv(1024).decode()
+        pstrlen_data = conn.recv(1)
+        if not pstrlen_data:
+            return None
+        pstrlen = struct.unpack("B", pstrlen_data)[0]
+        rest_len = pstrlen + 8 + 20 + 20
+        rest = conn.recv(rest_len)
+
+        if len(rest) < rest_len:
+            print("invalid handshake")
+            return None
+        fmt = f"{pstrlen}s8s20s20s"
+        protocol, reserved, file_hash, peer_id = struct.unpack(fmt, rest)
+
+        if protocol != ensure_protocol:
+            print(f"invalid protocol: {protocol}")
+            return None
+        
+        if file_hash != ensure_hash:
+            print("incorrect file hash")
+            return None
+        
+        print(f"Handshake OK from peer {peer_id}")
 if __name__ == "__main__":
     main()
