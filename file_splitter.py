@@ -1,8 +1,12 @@
-import hashlib, json, os
+import hashlib, json, os, random
 
 def create_metadata(filename, chunk_size=1024):
     filesize = os.path.getsize(filename)
     chunks = []
+
+    with open(filename, "rb") as f:
+        file_data = f.read()
+    file_hash = hashlib.sha256(file_data).hexdigest()
 
     with open(filename, "rb") as f:
         while chunk := f.read(chunk_size):
@@ -14,6 +18,7 @@ def create_metadata(filename, chunk_size=1024):
         "file_name": os.path.basename(filename),
         "file_size": filesize,
         "chunk_size": chunk_size,
+        "file_hash": file_hash,
         "chunks": chunks
     }
 

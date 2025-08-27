@@ -2,22 +2,12 @@ import socket, json
 
 
 tracker = {}
-
-def connect_peers(ip, port):
-    peer_socket = socket.socket()
-
-    try:
-        peer_socket.connect((ip, port))
-        return peer_socket
-    except socket.error as e:
-        print(f"Err connecting to peer {ip}:{port} - {e}")
-        return None
     
 def add_peer(info_hash, peer):
     if info_hash not in tracker:
         tracker[info_hash] = []
-    tracker[info_hash].append(peer)
-
+    if peer not in tracker[info_hash]:
+        tracker[info_hash].append(peer)
     return tracker
 
 def tracker_server():

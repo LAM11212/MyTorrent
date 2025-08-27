@@ -41,15 +41,15 @@ def main():
     print("Seeder listening on port 5000")
     connect_with_tracker()
 
-    conn, addr = s.accept()
+    
     while True:
+        conn, addr = s.accept()
         print("connection from", addr)
         if handle_handshake(conn):
             serve_piece(conn)
         conn.close()
 
-def handle_handshake(conn):
-        handshake = conn.recv(1024).decode()
+def handle_handshake(conn) -> bool:
         pstrlen_data = conn.recv(1)
         if not pstrlen_data:
             return None
@@ -59,18 +59,19 @@ def handle_handshake(conn):
 
         if len(rest) < rest_len:
             print("invalid handshake")
-            return None
+            return False
         fmt = f"{pstrlen}s8s20s20s"
         protocol, reserved, file_hash, peer_id = struct.unpack(fmt, rest)
 
         if protocol != ensure_protocol:
             print(f"invalid protocol: {protocol}")
-            return None
+            return False
         
         if file_hash != ensure_hash:
             print("incorrect file hash")
-            return None
+            return False
         
         print(f"Handshake OK from peer {peer_id}")
+        return True
 if __name__ == "__main__":
     main()
