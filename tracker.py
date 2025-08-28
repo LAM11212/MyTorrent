@@ -25,7 +25,8 @@ def tracker_server():
         msg = json.loads(data)
         if msg.get("action") == "register":
             peer = msg["peer"]
-            add_peer("xyz789", peer)
+            info_hash = msg["file_hash"]
+            add_peer(info_hash, peer)
             print(f"Registered peer: {peer}")
             conn.sendall(b"OK")
 
