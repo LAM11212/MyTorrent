@@ -49,10 +49,10 @@ def establish_conn(peer_socket, file_hash, peer_id):
         raise ConnectionError("No handshake recieved from seeder")
     rest_len = pstrlen + 8 + 32 + 20
     rest = peer_socket.recv(rest_len)
-    protocol, reserved, resp_hash, resp_id = struct.unpack(f"{pstrlen}s8s20s20s", rest)
+    protocol, reserved, resp_hash, resp_id = struct.unpack(f"{pstrlen}s8s32s20s", rest)
     if resp_hash != file_hash:
         raise ValueError("Seeder responded with wrong hash")
-    print(f"Handshake sent to peer {peer_socket.getpeername()}")
+    print(f"Handshake OK with seeder id {resp_id.decode(errors='ignore')}")
 
 if __name__ == '__main__':
     leecher_start()
